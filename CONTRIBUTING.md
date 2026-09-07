@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-* [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+* [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (`global.json` pins the build to the 8.0 SDK band, so newer installed SDKs are not used)
 * `git` (the build reads version information from the repository history)
 
 ## Build and test
