@@ -12,6 +12,10 @@
         <RootNamespace>GEAviation.Fabrica</RootNamespace>
 
         <PackageId>GEAviation.Fabrica</PackageId>
+
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
     </PropertyGroup>
     <ItemGroup>
         <EmbeddedResource Include="blueprint.xsd">
