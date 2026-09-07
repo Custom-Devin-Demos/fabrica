@@ -58,7 +58,7 @@ namespace GEAviation.Fabrica.Extensibility
                     lError = string.Format("{0} does not exist ", mLoadPath);
                     throw new FileNotFoundException(lError);
                 }
-#if !NETSTANDARD
+#if NETFRAMEWORK
                 mFileNames = checkProxyAssemblies(mFileNames);
 #endif
             }
@@ -142,7 +142,7 @@ namespace GEAviation.Fabrica.Extensibility
             }
         }
 
-#if !NETSTANDARD
+#if NETFRAMEWORK
         /// <summary>
         /// This function loads a sandbox appdomain and loads all assemblies in said domain,
         /// and checks to ensure assemblies fit the criteria for loading.
@@ -349,7 +349,7 @@ namespace GEAviation.Fabrica.Extensibility
             return lReturnPlugins;
         }
 
-#if !NETSTANDARD
+#if NETFRAMEWORK
 
         /// <summary>
         /// This function creates a single different appDomain,
