@@ -20,7 +20,7 @@ namespace Fabrica.Test.IO
             XmlBlueprintReader lReader = new XmlBlueprintReader();
             List<BlueprintIOError> lErrors = new List<BlueprintIOError>();
 
-            var lInputPath = Path.Combine( TestContext.CurrentContext.TestDirectory, "IO\\fully-featured-blueprints.xml" );
+            var lInputPath = Path.Combine( TestContext.CurrentContext.TestDirectory, "IO", "fully-featured-blueprints.xml" );
 
             var lModel = lReader.readBlueprintsFromFile( lInputPath, lErrors );
 

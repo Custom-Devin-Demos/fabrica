@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +9,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using GEAviation.Fabrica.Definition;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Fabrica.Test
 {
@@ -23,16 +24,10 @@ namespace Fabrica.Test
             // Snagged from: https://stackoverflow.com/questions/24871955/c-sharp-compilerresults-generateinmemory
             var lReferencedAssemblies =
                 AppDomain.CurrentDomain.GetAssemblies()
-                         .Where(a => !a.FullName.StartsWith("mscorlib", StringComparison.InvariantCultureIgnoreCase))
                          .Where(a => !a.IsDynamic) //necessary because a dynamic assembly will throw and exception when calling a.Location
-                         .Select(a => a.Location)
+                         .Where(a => !string.IsNullOrEmpty(a.Location))
+                         .Select(a => MetadataReference.CreateFromFile(a.Location))
                          .ToArray();
-
-            CompilerParameters lCompileParams = new CompilerParameters(lReferencedAssemblies)
-            {
-                GenerateExecutable = false,
-                GenerateInMemory = true
-            };
 
             var lCodeStream = Assembly.GetExecutingAssembly().GetManifestResourceStream( aResourceName );
             string lGoodPartsCode = string.Empty;
@@ -42,10 +37,23 @@ namespace Fabrica.Test
                 lGoodPartsCode = lSR.ReadToEnd();
             }
 
-            CompilerResults lCompilationResults = CodeDomProvider.CreateProvider("CSharp")
-                                                                 .CompileAssemblyFromSource(lCompileParams, lGoodPartsCode);
+            var lCompilation = CSharpCompilation.Create( Path.GetRandomFileName(),
+                                                         new[] { CSharpSyntaxTree.ParseText( lGoodPartsCode ) },
+                                                         lReferencedAssemblies,
+                                                         new CSharpCompilationOptions( OutputKind.DynamicallyLinkedLibrary ) );
 
-            return lCompilationResults.CompiledAssembly;
+            using( var lAssemblyStream = new MemoryStream() )
+            {
+                var lEmitResult = lCompilation.Emit( lAssemblyStream );
+
+                if( !lEmitResult.Success )
+                {
+                    var lErrors = lEmitResult.Diagnostics.Where( aDiag => aDiag.Severity == DiagnosticSeverity.Error );
+                    throw new InvalidOperationException( string.Join( Environment.NewLine, lErrors ) );
+                }
+
+                return Assembly.Load( lAssemblyStream.ToArray() );
+            }
         }
 
         public static Assembly getGoodPartsAssembly()
