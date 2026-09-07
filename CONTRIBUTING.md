@@ -13,7 +13,7 @@ One command restores, builds and runs the test suite:
 dotnet test Source/Fabrica.sln -c Release
 ```
 
-This is the same command that CI (`.github/workflows/ci.yml`) runs on every push and pull request.
+Tests live in `Source/Fabrica.Test` and use NUnit; `dotnet test` discovers and runs them without any additional tooling. This is the same command that CI (`.github/workflows/ci.yml`) runs on every push and pull request.
 
 ## Produce a package
 
