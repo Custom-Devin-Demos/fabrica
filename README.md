@@ -1,6 +1,16 @@
 # Fabrica
 Fabrica is a runtime Type Composition/Dependency Injection system for .NET-based applications.
 
+## Building
+
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) and `git`.
+
+```sh
+dotnet test Source/Fabrica.sln -c Release
+```
+
+Versions are derived from git tags by `Source/Versioning.targets`. See [CONTRIBUTING.md](CONTRIBUTING.md) for packaging, versioning and pull request expectations.
+
 ## Introduction
 The intent of Fabrica is to provide a fully-configurable dependency injection system, while minimizing
 boilerplate code used to operate in such an environment. Goals include:
