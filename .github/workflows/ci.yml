@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for Versioning.targets)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore Source/Fabrica.sln
+
+      - name: Build (Release)
+        run: dotnet build Source/Fabrica.sln --no-restore -c Release -p:TreatWarningsAsErrors=false
+
+      - name: Test
+        run: dotnet test Source/Fabrica.sln --no-build -c Release --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+      - name: Pack
+        run: dotnet pack Source/Fabrica/Fabrica.csproj --no-build -c Release -o artifacts
+
+      - name: Verify assembly and package version stamped by Versioning.targets
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pattern = '^\d+\.\d+\.\d+(-[0-9a-f]{8})?(-dirty)?'
+          $dlls = Get-ChildItem -Path Source/Fabrica/bin/Release -Recurse -Filter GEAviation.Fabrica.dll
+          if (-not $dlls) { throw 'No GEAviation.Fabrica.dll found under Source/Fabrica/bin/Release' }
+          foreach ($dll in $dlls) {
+            $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dll.FullName).ProductVersion
+            Write-Host "$($dll.Directory.Name): AssemblyInformationalVersion = '$info'"
+            if ([string]::IsNullOrWhiteSpace($info) -or $info -notmatch $pattern) {
+              throw "AssemblyInformationalVersion '$info' in $($dll.FullName) was not stamped by Versioning.targets"
+            }
+          }
+          $nupkg = Get-ChildItem -Path artifacts -Filter 'GEAviation.Fabrica.*.nupkg'
+          if (-not $nupkg) { throw 'No GEAviation.Fabrica .nupkg found in artifacts' }
+          foreach ($pkg in $nupkg) {
+            $version = $pkg.BaseName.Substring('GEAviation.Fabrica.'.Length)
+            Write-Host "Package version = '$version' ($($pkg.Name))"
+            if ($version -notmatch $pattern) { throw "Package version '$version' does not match expected git-derived version format" }
+          }
+
+      - name: Upload NuGet package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
