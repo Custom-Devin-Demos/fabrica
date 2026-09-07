@@ -785,7 +785,8 @@ namespace GEAviation.Fabrica.Definition
                                  return lParam != null
                                         && lParam.ParameterType == aObject.GetType()
                                         && ( aMethod.Name == "op_Implicit" || aMethod.Name == "op_Explicit" )
-                                        && aExpectedType.IsAssignableFrom( aMethod.ReturnType );
+                                        && aExpectedType.IsAssignableFrom( aMethod.ReturnType )
+                                        && !isByRefLike( aMethod.ReturnType );
                              } ).FirstOrDefault();
 
             // Find a cast method from aExpectedType.
@@ -796,7 +797,8 @@ namespace GEAviation.Fabrica.Definition
                                  return lParam != null
                                         && lParam.ParameterType == aObject.GetType()
                                         && ( aMethod.Name == "op_Implicit" || aMethod.Name == "op_Explicit" )
-                                        && aExpectedType.IsAssignableFrom( aMethod.ReturnType );
+                                        && aExpectedType.IsAssignableFrom( aMethod.ReturnType )
+                                        && !isByRefLike( aMethod.ReturnType );
                              } ).FirstOrDefault();
 
             var lMethod = lToMethod ?? lFromMethod;
@@ -808,6 +810,18 @@ namespace GEAviation.Fabrica.Definition
 
             aAsExpected = null;
             return false;
+        }
+
+        /// <summary>
+        /// Determines whether a type is a ref struct (e.g. <c>ReadOnlySpan&lt;char&gt;</c>).
+        /// Such types cannot be boxed, so cast operators returning them cannot be
+        /// invoked via reflection.
+        /// </summary>
+        private static bool isByRefLike( Type aType )
+        {
+            return aType.IsValueType
+                   && aType.GetCustomAttributesData()
+                            .Any( aAttribute => aAttribute.AttributeType.FullName == "System.Runtime.CompilerServices.IsByRefLikeAttribute" );
         }
     }
 }

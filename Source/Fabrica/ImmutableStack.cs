@@ -116,13 +116,13 @@ namespace GEAviation.Fabrica
         /// <inheritdoc/>
         public IEnumerator<DataType> GetEnumerator()
         {
-            return mStackStore.Reverse().GetEnumerator();
+            return Enumerable.Reverse( mStackStore ).GetEnumerator();
         }
 
         /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return mStackStore.Reverse().GetEnumerator();
+            return Enumerable.Reverse( mStackStore ).GetEnumerator();
         }
     }
 }

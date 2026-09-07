@@ -20,11 +20,36 @@ namespace Fabrica.Test.IO
             XmlBlueprintReader lReader = new XmlBlueprintReader();
             List<BlueprintIOError> lErrors = new List<BlueprintIOError>();
 
-            var lInputPath = Path.Combine( TestContext.CurrentContext.TestDirectory, "IO\\fully-featured-blueprints.xml" );
+            var lInputPath = Path.Combine( TestContext.CurrentContext.TestDirectory, "IO", "fully-featured-blueprints.xml" );
 
             var lModel = lReader.readBlueprintsFromFile( lInputPath, lErrors );
 
             // Verify the model
+        }
+
+        [Test]
+        public void rejectsDoctypeWithExternalEntity()
+        {
+            XmlBlueprintReader lReader = new XmlBlueprintReader();
+            List<BlueprintIOError> lErrors = new List<BlueprintIOError>();
+
+            var lInputPath = Path.Combine( TestContext.CurrentContext.TestDirectory, "xxe-blueprint.xml" );
+
+            File.WriteAllText( lInputPath,
+                               "<?xml version=\"1.0\"?>\n" +
+                               "<!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]>\n" +
+                               "<blueprint-list xmlns=\"http://www.geaviation.com/NG/Fabrica\">\n" +
+                               "  <blueprint namespace=\"&xxe;\"/>\n" +
+                               "</blueprint-list>\n" );
+
+            try
+            {
+                Assert.Throws<System.Xml.XmlException>( () => lReader.readBlueprintsFromFile( lInputPath, lErrors ) );
+            }
+            finally
+            {
+                File.Delete( lInputPath );
+            }
         }
 
         [Test]

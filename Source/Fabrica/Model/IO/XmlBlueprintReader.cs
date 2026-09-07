@@ -23,9 +23,22 @@ namespace GEAviation.Fabrica.Model.IO
         private static readonly XNamespace kFabricaNS;
         private static readonly XmlSchemaSet kBlueprintSchemaSet;
 
+        /// <summary>
+        /// Creates <see cref="XmlReaderSettings"/> that prohibit DTD processing and
+        /// disable external resource resolution, preventing XXE-style attacks.
+        /// </summary>
+        internal static XmlReaderSettings createSecureReaderSettings()
+        {
+            return new XmlReaderSettings
+            {
+                DtdProcessing = DtdProcessing.Prohibit,
+                XmlResolver = null
+            };
+        }
+
         static XmlBlueprintReader()
         {
-            var lSchemaSet = new XmlSchemaSet();
+            var lSchemaSet = new XmlSchemaSet { XmlResolver = null };
             var lSchemaPath = "GEAviation.Fabrica.blueprint.xsd";
 
             using( var lSchemaStream = typeof(XmlBlueprintReader).Assembly.GetManifestResourceStream( lSchemaPath ) )
@@ -35,7 +48,7 @@ namespace GEAviation.Fabrica.Model.IO
                     throw new InvalidOperationException( "Could not get embedded stream for blueprint XML schema." );
                 }
 
-                var lSchema = lSchemaSet.Add( null, XmlReader.Create( lSchemaStream ) );
+                var lSchema = lSchemaSet.Add( null, XmlReader.Create( lSchemaStream, createSecureReaderSettings() ) );
 
                 if( lSchema == null )
                 {
@@ -98,8 +111,9 @@ namespace GEAviation.Fabrica.Model.IO
             }
 
             using( StreamReader lSR = new StreamReader( aFilePath ) )
+            using( XmlReader lXmlReader = XmlReader.Create( lSR, createSecureReaderSettings() ) )
             {
-                var lDocument = XDocument.Load( lSR, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace );
+                var lDocument = XDocument.Load( lXmlReader, LoadOptions.SetLineInfo | LoadOptions.PreserveWhitespace );
                 return readBlueprintsFromXml( lDocument, aParseErrors );
             }
         }

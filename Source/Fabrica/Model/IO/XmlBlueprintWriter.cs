@@ -34,7 +34,7 @@ namespace GEAviation.Fabrica.Model.IO
 
         static XmlBlueprintWriter()
         {
-            var lSchemaSet = new XmlSchemaSet();
+            var lSchemaSet = new XmlSchemaSet { XmlResolver = null };
             var lSchemaPath = "GEAviation.Fabrica.blueprint.xsd";
 
             using( var lSchemaStream = typeof(XmlBlueprintReader).Assembly.GetManifestResourceStream( lSchemaPath ) )
@@ -43,7 +43,7 @@ namespace GEAviation.Fabrica.Model.IO
                 {
                     throw new InvalidOperationException( "Could not get embedded stream for blueprint XML schema." );
                 }
-                var lSchema = lSchemaSet.Add( null, XmlReader.Create( lSchemaStream ) );
+                var lSchema = lSchemaSet.Add( null, XmlReader.Create( lSchemaStream, XmlBlueprintReader.createSecureReaderSettings() ) );
 
                 if( lSchema == null )
                 {
