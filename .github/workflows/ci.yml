@@ -53,8 +53,12 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $pattern = '^\d+\.\d+\.\d+(-[0-9a-f]{8})?(-dirty)?'
-          $dlls = Get-ChildItem -Path Source/Fabrica/bin/Release -Recurse -Filter GEAviation.Fabrica.dll
-          if (-not $dlls) { throw 'No GEAviation.Fabrica.dll found under Source/Fabrica/bin/Release' }
+          $expectedTfms = @('netstandard2.0', 'net472', 'net8.0')
+          $dlls = foreach ($tfm in $expectedTfms) {
+            $path = "Source/Fabrica/bin/Release/$tfm/GEAviation.Fabrica.dll"
+            if (-not (Test-Path $path)) { throw "Expected $path was not built" }
+            Get-Item $path
+          }
           foreach ($dll in $dlls) {
             $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($dll.FullName).ProductVersion
             Write-Host "$($dll.Directory.Name): AssemblyInformationalVersion = '$info'"
